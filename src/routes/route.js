@@ -7,5 +7,7 @@ router.get('/test-me', function (req, res) {
     res.send('My second ever api!')
 });
 
+router.post('/url/shorten',Urlcontroller.Shorturl)
+
 
 module.exports = router
