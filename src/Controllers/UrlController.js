@@ -12,9 +12,19 @@ let Shorturl=async (req,res)=>{
     if(!data.urlCode) return res.status(400).send({status:false,msg:'urlCode is required'})
     if(!data.longUrl) return res.status(400).send({status:false,msg:'longUrl is required'})
     if(!validator.isURL(data.longUrl)) return res.status(400).send({status:false,msg:'Url is not valid'})
-    if(!data.shortUrl) return res.status(400).send({status:false,msg:'shortUrl is required'})
+    // if(!data.shortUrl) return res.status(400).send({status:false,msg:'shortUrl is required'})
+    let uniqueUrl= await UrlModel.findOne({longUrl:data.longUrl})
+    if(uniqueUrl) return res.status(400).send({status:false,msg:'Url already exists'})
+let baseUrl="http://localhost:3000"
+let shortUrl=baseUrl+'/'+shortid.generate().toLowerCase()
+data.baseUrl=baseUrl;
+data.shortUrl=shortUrl
+await UrlModel.create(data)
+    let responseData = await UrlModel.findOne({baseUrl:baseUrl}).select({_id:0, __v:0, createdAt:0, updatedAt:0})
 
-    
+    res.status(201).send({status:true, message:"URL create successfully", data:responseData})    
+
+
 
 }
 
