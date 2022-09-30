@@ -1,6 +1,8 @@
 const shortid = require("shortid");
-const validator = require("validator");
 const UrlModel = require('../Models/UrlModel')
+const { isValidUrl, isValid } = require('../Utils/validation')
+
+
 
 
 
@@ -8,10 +10,10 @@ let Shorturl = async (req, res) => {
   try {
     let data = req.body
 
-    if (Object.keys(data).length == 0) return res.status(400).send({ status: false, msg: 'body shoulnot be empty' })
+    if (!isValid(data)) return res.status(400).send({ status: false, msg: 'body shoulnot be empty' })
 
     if (!data.longUrl) return res.status(400).send({ status: false, msg: 'longUrl is required' })
-    if (!validator.isURL(data.longUrl)) return res.status(400).send({ status: false, msg: 'Url is not valid' })
+    if (!isValidUrl(data.longUrl)) return res.status(400).send({ status: false, msg: 'Url is not valid' })
 
     let checkUrl = await UrlModel.findOne({ longUrl: data.longUrl }).select({ _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
     if (checkUrl) {
