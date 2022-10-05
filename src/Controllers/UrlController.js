@@ -1,8 +1,26 @@
 const shortid = require("shortid");
 const UrlModel = require('../Models/UrlModel')
 const { isValidUrl, isValid } = require('../Utils/validation')
+const redis = require("redis");
+const { promisify } = require("util");
 
 
+
+const redisClient = redis.createClient(
+  16441,
+  "redis-16441.c15.us-east-1-2.ec2.cloud.redislabs.com",
+  { no_ready_check: true }
+);
+redisClient.auth("u2SCdcxDHNNGy3Fl11G9RoHJaP6kcOrS", function (err) {
+  if (err) throw err;
+});
+
+redisClient.on("connect", async function () {
+  console.log("Connected to Redis..");
+});
+
+const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
+const SETEX_ASYNC = promisify(redisClient.SETEX).bind(redisClient);
 
 
 
@@ -16,9 +34,22 @@ let Shorturl = async (req, res) => {
     if (!isValidUrl(data.longUrl)) return res.status(400).send({ status: false, msg: 'Url is not valid' })
 
     let checkUrl = await UrlModel.findOne({ longUrl: data.longUrl }).select({ _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
-    if (checkUrl) {
-      return res.status(200).send({ status: true, message: "Success", data: checkUrl })
+    let getUrl = await GET_ASYNC(`${data.longUrl}`);
+    let url = JSON.parse(getUrl);
+    if(url){
+      return res.status(200).send({ status: true, message:"Success", data: url })
     }
+    if(checkUrl) {
+
+      //if already exist then setting the document in the cache with expire time 
+      await SETEX_ASYNC(`${data.longUrl}`, 84600, JSON.stringify(checkUrl))
+      return res.status(200).send({status:true, message:"Success", data: checkUrl})
+    }
+
+
+    // if (checkUrl) {
+    //   return res.status(200).send({ status: true, message: "Success", data: checkUrl })
+    // }
     urlCode = shortid.generate().toLowerCase()
 
     let baseUrl = "http://localhost:3000/"
