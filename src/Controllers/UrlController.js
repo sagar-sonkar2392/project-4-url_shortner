@@ -96,7 +96,7 @@ const Shorturl = async function (req, res) {
 
 // =================================get url====================================================
 
-let Geturl = async (req, res) => {
+let Geturl = async (req , res) => {
   try {
      //getting the data from cache if present
      let getLongUrl = await GET_ASYNC(`${req.params.urlCode}`)
